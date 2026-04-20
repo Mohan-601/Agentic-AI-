@@ -1,0 +1,15 @@
+
+venv/
+env/
+.venv/
+
+
+jarvis_creation.png
+jarvis_memory/
+
+
+__pycache__/
+*.pyc
+
+.vscode/
+.idea/
