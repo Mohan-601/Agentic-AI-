@@ -4,8 +4,8 @@ env/
 .venv/
 
 
-jarvis_creation.png
-jarvis_memory/
+helix_creation.png
+helix_memory/
 
 
 __pycache__/
