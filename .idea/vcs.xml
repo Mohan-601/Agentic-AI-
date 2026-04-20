@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="VcsDirectoryMappings">
-    <mapping directory="$PROJECT_DIR$/webui" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/webui/repositories/BLIP" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/webui/repositories/huggingface_guess" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/webui/repositories/stable-diffusion-webui-assets" vcs="Git" />
-  </component>
-</project>
