@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helix</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Markdown renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <style>
+        /* ══════════════════════════════════════
+           RESET & BASE
+        ══════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-base:      #0d0d0d;
+            --bg-sidebar:   #111111;
+            --bg-card:      #1a1a1a;
+            --bg-hover:     #222222;
+            --border:       #1e1e1e;
+            --border-light: #2a2a2a;
+            --accent:       #5b3fff;
+            --accent-light: #7c5fff;
+            --accent-dim:   #5b3fff22;
+            --text-primary: #e8e8e8;
+            --text-muted:   #888888;
+            --text-faint:   #444444;
+            --text-label:   #3a3a3a;
+            --green:        #4ade80;
+            --red:          #f87171;
+            --amber:        #fbbf24;
+            --code-bg:      #161b22;
+            --radius-sm:    6px;
+            --radius-md:    10px;
+            --radius-lg:    14px;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ══════════════════════════════════════
+           SCROLLBAR STYLING
+        ══════════════════════════════════════ */
+        ::-webkit-scrollbar              { width: 5px; }
+        ::-webkit-scrollbar-track        { background: transparent; }
+        ::-webkit-scrollbar-thumb        { background: #2a2a2a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover  { background: #3a3a3a; }
+
+        /* ══════════════════════════════════════
+           SIDEBAR
+        ══════════════════════════════════════ */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: width 0.2s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px 16px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 3px;
+        }
+
+        .sidebar-tagline {
+            font-size: 0.66rem;
+            color: var(--text-faint);
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: var(--red);
+            transition: background-color 0.4s ease;
+            flex-shrink: 0;
+        }
+
+        .dot.online { background-color: var(--green); }
+
+        .dot.online.pulse {
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+            50%       { box-shadow: 0 0 0 5px rgba(74, 222, 128, 0); }
+        }
+
+        #statusText {
+            font-size: 0.74rem;
+            font-weight: 500;
+            color: var(--red);
+            transition: color 0.4s ease;
+        }
+
+        #statusText.online { color: var(--green); }
+
+        /* ─── Sidebar stats cards ─── */
+        .sidebar-content {
+            padding: 14px 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .new-chat-btn {
+            background: var(--bg-card);
+            color: #ccc;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-family: 'Sora', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            padding: 9px 12px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .new-chat-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .section-label {
+            font-size: 0.64rem;
+            font-weight: 600;
+            color: var(--text-label);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 6px;
+            padding-left: 2px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px 11px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            margin-bottom: 3px;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .model-info {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+        }
+
+        .model-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3px 0;
+        }
+
+        .model-name-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .model-name-value {
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-light);
+        }
+
+        /* ══════════════════════════════════════
+           MAIN AREA
+        ══════════════════════════════════════ */
+        .main-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            padding: 14px 32px;
+            border-bottom: 1px solid #181818;
+            font-size: 0.75rem;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .agent-status { color: var(--accent-light); font-weight: 500; }
+
+        /* ── Active tool badge ── */
+        .tool-badge {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.7rem;
+            color: var(--accent-light);
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .tool-badge.visible { display: flex; }
+
+        .tool-badge-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--accent-light);
+            animation: tool-blink 0.8s ease-in-out infinite;
+        }
+
+        @keyframes tool-blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.2; }
+        }
+
+        /* ══════════════════════════════════════
+           CHAT CONTAINER
+        ══════════════════════════════════════ */
+        .chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 32px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-inner {
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px 40px;
+            color: var(--text-faint);
+        }
+
+        .empty-icon { font-size: 2.8rem; margin-bottom: 16px; }
+
+        .empty-state h2 {
+            font-size: 1.35rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 0.84rem;
+            color: var(--text-muted);
+            line-height: 1.75;
+            max-width: 440px;
+            margin: 0 auto;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .chip {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 7px 15px;
+            font-size: 0.77rem;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .chip:hover {
+            border-color: var(--accent);
+            color: #fff;
+            background: var(--bg-hover);
+        }
+
+        /* ══════════════════════════════════════
+           MESSAGES
+        ══════════════════════════════════════ */
+        .msg-row {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 26px;
+            animation: fadeUp 0.22s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(7px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.68rem;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-top: 3px;
+        }
+
+        .avatar-user  {
+            background: var(--bg-card);
+            color: #aaa;
+            border: 1px solid #252525;
+        }
+
+        .avatar-helix {
+            background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+            color: #fff;
+        }
+
+        .msg-body { flex: 1; min-width: 0; }
+
+        .msg-meta {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .msg-sender {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .msg-time {
+            font-size: 0.63rem;
+            color: #333;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .msg-copy-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #333;
+            cursor: pointer;
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: all 0.15s;
+            font-family: 'Sora', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .msg-row:hover .msg-copy-btn { opacity: 1; }
+        .msg-copy-btn:hover { color: var(--text-muted); background: var(--bg-card); }
+
+        /* ── Markdown-rendered message text ── */
+        .msg-text {
+            font-size: 0.92rem;
+            line-height: 1.75;
+            color: #d8d8d8;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .msg-text p  { margin-bottom: 0.75em; }
+        .msg-text p:last-child { margin-bottom: 0; }
+
+        .msg-text h1,
+        .msg-text h2,
+        .msg-text h3,
+        .msg-text h4 {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin: 1em 0 0.4em;
+            line-height: 1.3;
+        }
+
+        .msg-text h1 { font-size: 1.25rem; }
+        .msg-text h2 { font-size: 1.1rem;  }
+        .msg-text h3 { font-size: 0.98rem; }
+
+        .msg-text ul,
+        .msg-text ol {
+            padding-left: 1.4em;
+            margin-bottom: 0.75em;
+        }
+
+        .msg-text li { margin-bottom: 0.25em; }
+
+        .msg-text strong { color: var(--text-primary); font-weight: 600; }
+        .msg-text em     { color: #bbb; }
+
+        .msg-text a {
+            color: var(--accent-light);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .msg-text a:hover { color: #a87fff; }
+
+        .msg-text blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 12px;
+            margin: 0.5em 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .msg-text hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1em 0;
+        }
+
+        /* ── Inline code ── */
+        .msg-text code:not(pre code) {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            background: var(--code-bg);
+            border: 1px solid #2a2a2a;
+            padding: 1px 6px;
+            border-radius: 4px;
+            color: #e2a9ff;
+        }
+
+        /* ── Code blocks ── */
+        .code-block-wrapper {
+            position: relative;
+            margin: 0.75em 0;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid #2a2a2a;
+        }
+
+        .code-block-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0d1117;
+            padding: 6px 12px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            color: #888;
+            text-transform: lowercase;
+        }
+
+        .copy-code-btn {
+            background: none;
+            border: 1px solid #2a2a2a;
+            color: #666;
+            font-size: 0.68rem;
+            font-family: 'Sora', sans-serif;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .copy-code-btn:hover { border-color: var(--accent); color: var(--accent-light); }
+
+        .msg-text pre {
+            margin: 0;
+            background: var(--code-bg) !important;
+        }
+
+        .msg-text pre code {
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.82rem !important;
+            line-height: 1.6 !important;
+            background: none !important;
+            border: none !important;
+            padding: 14px !important;
+            display: block;
+        }
+
+        /* ── Error message variant ── */
+        .msg-row.error .msg-text {
+            color: #fca5a5;
+            background: #1a0808;
+            border: 1px solid #3a1515;
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            font-size: 0.85rem;
+        }
+
+        /* ── Typing indicator ── */
+        .typing-row {
+            display: none;
+            gap: 14px;
+            margin-bottom: 26px;
+        }
+
+        .typing-row.visible { display: flex; }
+
+        .typing-indicator {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .typing-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .typing-dots {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            height: 22px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: bounce 1.2s ease-in-out infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.30s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0);    opacity: 0.4; }
+            40%            { transform: translateY(-5px); opacity: 1; }
+        }
+
+        .typing-phase {
+            font-size: 0.72rem;
+            color: var(--accent-light);
+            font-style: italic;
+        }
+
+        /* ══════════════════════════════════════
+           SCROLL-TO-BOTTOM BUTTON
+        ══════════════════════════════════════ */
+        .scroll-btn {
+            position: absolute;
+            bottom: 130px;
+            right: 32px;
+            width: 34px;
+            height: 34px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1rem;
+            transition: all 0.15s;
+            z-index: 10;
+        }
+
+        .scroll-btn:hover { border-color: var(--accent); color: var(--accent-light); }
+        .scroll-btn.visible { display: flex; }
+
+        /* ══════════════════════════════════════
+           INPUT AREA
+        ══════════════════════════════════════ */
+        .input-wrapper {
+            padding: 14px 32px 28px;
+            background: linear-gradient(to top, var(--bg-base) 75%, transparent);
+            flex-shrink: 0;
+        }
+
+        .input-inner {
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        .input-container {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: flex-end;
+            padding: 8px 10px 8px 14px;
+            border: 1px solid #252525;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-container:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim);
+        }
+
+        .input-container textarea {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-family: 'Sora', sans-serif;
+            font-size: 0.91rem;
+            line-height: 1.6;
+            resize: none;
+            max-height: 180px;
+            padding: 6px 4px;
+            min-height: 36px;
+        }
+
+        .input-container textarea::placeholder { color: #404040; }
+
+        .input-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+
+        .send-btn {
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover:not(:disabled)  { background: var(--accent-light); }
+        .send-btn:active:not(:disabled) { transform: scale(0.93); }
+        .send-btn:disabled { background: #2a2a2a; color: #444; cursor: not-allowed; }
+
+        .input-hint {
+            font-size: 0.63rem;
+            color: #333;
+            margin-top: 7px;
+            padding-left: 2px;
+            display: flex;
+            gap: 14px;
+        }
+
+        .input-hint kbd {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🌀 Helix</div>
+            <div class="sidebar-tagline">Autonomous Agent Core</div>
+            <div class="status-row">
+                <div class="dot" id="statusDot"></div>
+                <span id="statusText">Offline</span>
+            </div>
+        </div>
+
+        <div class="sidebar-content">
+            <button class="new-chat-btn" onclick="clearChat()">
+                ✏️ New Chat
+            </button>
+
+            <!-- Live stats -->
+            <div>
+                <div class="section-label">Session Stats</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="memCount">—</div>
+                        <div class="stat-label">Memories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="historyTurns">—</div>
+                        <div class="stat-label">Turns</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model info -->
+            <div>
+                <div class="section-label">Models</div>
+                <div class="model-info">
+                    <div class="model-row">
+                        <span class="model-name-label">Planner</span>
+                        <span class="model-name-value">gemma2:2b</span>
+                    </div>
+                    <div class="model-row">
+                        <span class="model-name-label">Thinker</span>
+                        <span class="model-name-value">mistral:7b</span>
+                    </div>
+                    <div class="model-row">
+                        <span class="model-name-label">Embed</span>
+                        <span class="model-name-value">nomic</span>
+                    </div>
+                    <div class="model-row">
+                        <span class="model-name-label">Vision</span>
+                        <span class="model-name-value">SD Forge</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory note -->
+            <div>
+                <div class="section-label">Memory</div>
+                <div style="font-size:0.74rem; color:#555; line-height:1.6;">
+                    ChromaDB is active.<br>
+                    Helix remembers past sessions across restarts.
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Main Area ── -->
+    <main class="main-area" style="position:relative;">
+        <div class="top-bar">
+            <span>Helix — Workspace</span>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div class="tool-badge" id="toolBadge">
+                    <div class="tool-badge-dot"></div>
+                    <span id="toolBadgeText">Planning</span>
+                </div>
+                <span class="agent-status">Plan → Execute → Reflect</span>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-inner" id="chatInner">
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">🧠</div>
+                    <h2>Helix is ready.</h2>
+                    <p>I can autonomously browse the web, write and run code,<br>generate images, and recall our past conversations.</p>
+                    <div class="chips">
+                        <div class="chip" onclick="setInput('Search the web for the latest AI news today')">🌐 Search the web</div>
+                        <div class="chip" onclick="setInput('Write and execute a Python script to calculate the first 20 Fibonacci numbers')">💻 Execute code</div>
+                        <div class="chip" onclick="setInput('Generate a cinematic, highly detailed image of a cyberpunk city at night')">🎨 Generate image</div>
+                        <div class="chip" onclick="setInput('What do you remember from our past conversations?')">🧠 Test memory</div>
+                        <div class="chip" onclick="setInput('Explain the ReAct agent architecture and how it differs from standard LLM prompting')">📚 Explain ReAct</div>
+                    </div>
+                </div>
+
+                <!-- Typing indicator (hidden by default) -->
+                <div class="typing-row" id="typingRow">
+                    <div class="msg-avatar avatar-helix">H</div>
+                    <div class="typing-indicator">
+                        <div class="typing-label">Helix Agent</div>
+                        <div class="typing-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="typing-phase" id="typingPhase">Initialising…</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll-to-bottom button -->
+        <button class="scroll-btn" id="scrollBtn" onclick="scrollToBottom(true)" title="Scroll to bottom">↓</button>
+
+        <!-- Input -->
+        <div class="input-wrapper">
+            <div class="input-inner">
+                <div class="input-container">
+                    <textarea
+                        id="chatInput"
+                        rows="1"
+                        placeholder="Give Helix a goal…"
+                        oninput="autoResize(this)"
+                        onkeydown="handleKeyDown(event)"
+                    ></textarea>
+                    <div class="input-actions">
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send (Enter)">
+                            ➤
+                        </button>
+                    </div>
+                </div>
+                <div class="input-hint">
+                    <span><kbd>Enter</kbd> to send</span>
+                    <span><kbd>Shift+Enter</kbd> for new line</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ══════════════════════════════════════════════════
+        // CONFIG
+        // ══════════════════════════════════════════════════
+        const SERVER_URL = "http://localhost:5000";
+
+        // Configure marked for safe rendering
+        marked.setOptions({
+            gfm:    true,
+            breaks: true,
+        });
+
+        // ══════════════════════════════════════════════════
+        // DOM REFS
+        // ══════════════════════════════════════════════════
+        const chatContainer = document.getElementById('chatContainer');
+        const chatInner     = document.getElementById('chatInner');
+        const chatInput     = document.getElementById('chatInput');
+        const emptyState    = document.getElementById('emptyState');
+        const sendBtn       = document.getElementById('sendBtn');
+        const typingRow     = document.getElementById('typingRow');
+        const typingPhase   = document.getElementById('typingPhase');
+        const statusDot     = document.getElementById('statusDot');
+        const statusText    = document.getElementById('statusText');
+        const memCount      = document.getElementById('memCount');
+        const historyTurns  = document.getElementById('historyTurns');
+        const toolBadge     = document.getElementById('toolBadge');
+        const toolBadgeText = document.getElementById('toolBadgeText');
+        const scrollBtn     = document.getElementById('scrollBtn');
+
+        // ══════════════════════════════════════════════════
+        // STATE
+        // ══════════════════════════════════════════════════
+        let isOnline       = false;
+        let isBusy         = false;
+        let userScrolledUp = false;   // auto-scroll lock
+
+        // Rotation of status messages shown while Helix is thinking
+        const PHASES = [
+            "Planning tasks…",
+            "Searching the web…",
+            "Reasoning with Mistral…",
+            "Reflecting on results…",
+            "Assembling final answer…",
+        ];
+        let phaseIdx = 0;
+        let phaseTimer = null;
+
+        // ══════════════════════════════════════════════════
+        // SCROLL MANAGEMENT
+        // ══════════════════════════════════════════════════
+        chatContainer.addEventListener('scroll', () => {
+            const atBottom = chatContainer.scrollHeight - chatContainer.scrollTop
+                             <= chatContainer.clientHeight + 60;
+            userScrolledUp = !atBottom;
+            scrollBtn.classList.toggle('visible', userScrolledUp);
+        });
+
+        function scrollToBottom(force = false) {
+            if (force || !userScrolledUp) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                userScrolledUp = false;
+                scrollBtn.classList.remove('visible');
+            }
+        }
+
+        // ══════════════════════════════════════════════════
+        // STATUS POLLING
+        // ══════════════════════════════════════════════════
+        async function checkStatus() {
+            try {
+                const res  = await fetch(`${SERVER_URL}/status`, { signal: AbortSignal.timeout(4000) });
+                const data = await res.json();
+                isOnline = res.ok;
+
+                if (isOnline) {
+                    statusDot.classList.add('online', 'pulse');
+                    statusText.textContent = 'Online';
+                    statusText.classList.add('online');
+
+                    // Update live stats
+                    if (typeof data.mem_count    === 'number') memCount.textContent     = data.mem_count;
+                    if (typeof data.history_turns === 'number') historyTurns.textContent = data.history_turns;
+                } else {
+                    setOffline();
+                }
+            } catch {
+                isOnline = false;
+                setOffline();
+            }
+        }
+
+        function setOffline() {
+            statusDot.classList.remove('online', 'pulse');
+            statusText.textContent = 'Offline';
+            statusText.classList.remove('online');
+            memCount.textContent     = '—';
+            historyTurns.textContent = '—';
+        }
+
+        checkStatus();
+        setInterval(checkStatus, 5000);
+
+        // ══════════════════════════════════════════════════
+        // TEXTAREA AUTO-RESIZE
+        // ══════════════════════════════════════════════════
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+        }
+
+        function resetTextarea() {
+            chatInput.value  = '';
+            chatInput.style.height = 'auto';
+            chatInput.style.height = '36px';
+        }
+
+        // ══════════════════════════════════════════════════
+        // KEY HANDLER — Enter to send, Shift+Enter for newline
+        // ══════════════════════════════════════════════════
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function setInput(text) {
+            chatInput.value = text;
+            autoResize(chatInput);
+            chatInput.focus();
+        }
+
+        // ══════════════════════════════════════════════════
+        // TYPING INDICATOR  (phase rotation)
+        // ══════════════════════════════════════════════════
+        function showTyping() {
+            // Insert typing row right before the end (after any existing messages)
+            chatInner.appendChild(typingRow);
+            typingRow.classList.add('visible');
+            phaseIdx   = 0;
+            typingPhase.textContent = PHASES[0];
+            phaseTimer = setInterval(() => {
+                phaseIdx = (phaseIdx + 1) % PHASES.length;
+                typingPhase.textContent = PHASES[phaseIdx];
+            }, 2500);
+            scrollToBottom();
+        }
+
+        function hideTyping() {
+            typingRow.classList.remove('visible');
+            clearInterval(phaseTimer);
+            phaseTimer = null;
+        }
+
+        // ══════════════════════════════════════════════════
+        // TOOL BADGE  (top bar indicator)
+        // ══════════════════════════════════════════════════
+        function showToolBadge(label) {
+            toolBadgeText.textContent = label;
+            toolBadge.classList.add('visible');
+        }
+
+        function hideToolBadge() {
+            toolBadge.classList.remove('visible');
+        }
+
+        // ══════════════════════════════════════════════════
+        // MARKDOWN + CODE RENDERING
+        // ══════════════════════════════════════════════════
+        function renderMarkdown(rawText) {
+            // Parse markdown → HTML string
+            const html = marked.parse(rawText);
+
+            // Build a temporary container to post-process code blocks
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+
+            // Wrap each <pre><code> in a custom block with header + copy button
+            tmp.querySelectorAll('pre').forEach(pre => {
+                const code = pre.querySelector('code');
+                if (!code) return;
+
+                // Detect language from class (highlight.js convention: language-xxx)
+                const langClass = [...code.classList].find(c => c.startsWith('language-'));
+                const lang      = langClass ? langClass.replace('language-', '') : 'code';
+
+                // Syntax-highlight
+                if (langClass && hljs.getLanguage(lang)) {
+                    hljs.highlightElement(code);
+                } else {
+                    hljs.highlightElement(code);   // auto-detect
+                }
+
+                // Build wrapper
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+
+                const header = document.createElement('div');
+                header.className = 'code-block-header';
+
+                const langLabel = document.createElement('span');
+                langLabel.className   = 'code-lang';
+                langLabel.textContent = lang;
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className   = 'copy-code-btn';
+                copyBtn.textContent = 'Copy';
+                copyBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(code.textContent).then(() => {
+                        copyBtn.textContent = 'Copied ✓';
+                        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+                    });
+                });
+
+                header.appendChild(langLabel);
+                header.appendChild(copyBtn);
+                wrapper.appendChild(header);
+                wrapper.appendChild(pre.cloneNode(true));
+
+                pre.replaceWith(wrapper);
+            });
+
+            return tmp;
+        }
+
+        // ══════════════════════════════════════════════════
+        // APPEND MESSAGE
+        // ══════════════════════════════════════════════════
+        function appendMessage(role, rawText, isError = false) {
+            // Hide empty state on first real message
+            emptyState.style.display = 'none';
+
+            const isUser = role === 'user';
+            const now    = new Date();
+            const time   = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const msgRow = document.createElement('div');
+            msgRow.className = 'msg-row' + (isError ? ' error' : '');
+
+            // Avatar
+            const avatar = document.createElement('div');
+            avatar.className = `msg-avatar ${isUser ? 'avatar-user' : 'avatar-helix'}`;
+            avatar.textContent = isUser ? 'You' : 'H';
+
+            // Body
+            const body = document.createElement('div');
+            body.className = 'msg-body';
+
+            // Meta row (sender + time + copy btn)
+            const meta = document.createElement('div');
+            meta.className = 'msg-meta';
+
+            const sender = document.createElement('span');
+            sender.className   = 'msg-sender';
+            sender.textContent = isUser ? 'You' : 'Helix Agent';
+
+            const timeEl = document.createElement('span');
+            timeEl.className   = 'msg-time';
+            timeEl.textContent = time;
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className   = 'msg-copy-btn';
+            copyBtn.innerHTML   = '⎘ Copy';
+            copyBtn.title       = 'Copy message';
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(rawText).then(() => {
+                    copyBtn.innerHTML = '✓ Copied';
+                    setTimeout(() => { copyBtn.innerHTML = '⎘ Copy'; }, 2000);
+                });
+            });
+
+            meta.appendChild(sender);
+            meta.appendChild(timeEl);
+            meta.appendChild(copyBtn);
+
+            // Message text
+            const textDiv = document.createElement('div');
+            textDiv.className = 'msg-text';
+
+            if (isError) {
+                // Plain text for error messages (no markdown parsing needed)
+                textDiv.textContent = rawText;
+            } else if (isUser) {
+                // User messages: escape HTML, preserve newlines
+                const escaped = rawText
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\n/g, '<br>');
+                textDiv.innerHTML = escaped;
+            } else {
+                // Agent responses: full markdown + code highlighting
+                const rendered = renderMarkdown(rawText);
+                textDiv.appendChild(rendered);
+            }
+
+            body.appendChild(meta);
+            body.appendChild(textDiv);
+            msgRow.appendChild(avatar);
+            msgRow.appendChild(body);
+
+            // Insert before the typing row so typing stays at bottom
+            chatInner.insertBefore(msgRow, typingRow);
+
+            scrollToBottom();
+            return msgRow;
+        }
+
+        // ══════════════════════════════════════════════════
+        // CLEAR CHAT
+        // ══════════════════════════════════════════════════
+        function clearChat() {
+            // Remove all message rows (keep emptyState and typingRow)
+            [...chatInner.children].forEach(el => {
+                if (el !== emptyState && el !== typingRow) {
+                    el.remove();
+                }
+            });
+            emptyState.style.display = '';   // restore
+            resetTextarea();
+            chatInput.focus();
+        }
+
+        // ══════════════════════════════════════════════════
+        // SEND MESSAGE
+        // ══════════════════════════════════════════════════
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message || isBusy) return;
+
+            appendMessage('user', message);
+            resetTextarea();
+
+            if (!isOnline) {
+                appendMessage(
+                    'helix',
+                    '⚠️ Cannot reach the Helix backend. Make sure helix_server.py is running on port 5000.',
+                    true
+                );
+                return;
+            }
+
+            // Disable input
+            isBusy = true;
+            sendBtn.disabled    = true;
+            chatInput.disabled  = true;
+
+            showTyping();
+            showToolBadge('Planning');
+
+            try {
+                const response = await fetch(`${SERVER_URL}/chat`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ message }),
+                });
+
+                hideTyping();
+
+                if (!response.ok) {
+                    const errText = await response.text().catch(() => 'Unknown server error.');
+                    appendMessage('helix', `Server error ${response.status}: ${errText}`, true);
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Update sidebar stats from response
+                if (typeof data.mem_count === 'number') {
+                    memCount.textContent = data.mem_count;
+                }
+
+                const reply = data.response || '[No response received. The agent may have errored out.]';
+                appendMessage('helix', reply);
+
+                // Refresh full status (updates history_turns too)
+                checkStatus();
+
+            } catch (err) {
+                hideTyping();
+                appendMessage(
+                    'helix',
+                    `⚠️ Connection error: ${err.message}\n\nMake sure helix_server.py is running and accessible at ${SERVER_URL}.`,
+                    true
+                );
+            } finally {
+                isBusy = false;
+                sendBtn.disabled   = false;
+                chatInput.disabled = false;
+                hideToolBadge();
+                chatInput.focus();
+            }
+        }
+    </script>
+</body>
+</html>
