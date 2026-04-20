@@ -1,3 +1,7 @@
+## An IMPORTANT NOTE:
+In order to fully utilize this project you need to setup
+## FORGE UI ##
+
 ## Setup Instructions
 1. Install Python dependencies: `pip install -r requirements.txt`
 2. Install Ollama and pull the required models:
